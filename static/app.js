@@ -164,20 +164,27 @@ function updateFilterOptions() {
     if (!fieldSelect) return;
 
     const currentField = fieldSelect.value;
-
-    // Get unique values for each field
     const fieldValues = {};
-    const fields = ["issue_type", "status", "project", "assignee"];
 
-    for (const field of fields) {
-        const values = new Set();
-        for (const iss of issues) {
-            const val = iss[field];
-            if (val !== undefined && val !== null && val !== "") {
-                values.add(typeof val === "string" ? val : String(val));
-            }
+    // Handle relationship types separately
+    if (currentField === "link_type") {
+        const types = new Set();
+        for (const rel of relationships) {
+            if (rel.link_type) types.add(rel.link_type);
         }
-        fieldValues[field] = [...values].sort();
+        fieldValues["link_type"] = [...types].sort();
+    } else {
+        const fields = ["issue_type", "status", "project", "assignee"];
+        for (const field of fields) {
+            const values = new Set();
+            for (const iss of issues) {
+                const val = iss[field];
+                if (val !== undefined && val !== null && val !== "") {
+                    values.add(typeof val === "string" ? val : String(val));
+                }
+            }
+            fieldValues[field] = [...values].sort();
+        }
     }
 
     // Update the value dropdown based on selected field
@@ -1912,10 +1919,21 @@ function applyDisplayFilter() {
 
     // Filter nodes by the selected field and value
     const matchingKeys = new Set();
-    for (const iss of issues) {
-        const fieldValue = (iss[field] || "").toString().toLowerCase();
-        if (fieldValue.includes(value.toLowerCase())) {
-            matchingKeys.add(iss.key);
+
+    if (field === "link_type") {
+        // Find nodes that participate in any relationship of the selected type
+        for (const rel of relationships) {
+            if ((rel.link_type || "").toLowerCase() === value.toLowerCase()) {
+                matchingKeys.add(rel.source_key);
+                matchingKeys.add(rel.target_key);
+            }
+        }
+    } else {
+        for (const iss of issues) {
+            const fieldValue = (iss[field] || "").toString().toLowerCase();
+            if (fieldValue.includes(value.toLowerCase())) {
+                matchingKeys.add(iss.key);
+            }
         }
     }
 

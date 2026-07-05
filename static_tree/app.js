@@ -514,16 +514,31 @@ function updateFilterOptions() {
     if (!fieldSelect) return;
     const currentField = fieldSelect.value;
     const fieldValues = {};
-    const fields = ["issue_type", "status", "project", "assignee"];
-    for (const field of fields) {
-        const values = new Set();
-        for (const iss of issues) {
-            const val = iss[field];
-            if (val !== undefined && val !== null && val !== "") {
-                values.add(typeof val === "string" ? val : String(val));
+
+    // Handle relationship types separately
+    if (currentField === "link_type") {
+        const types = new Set();
+        for (const rel of relationships) {
+            if (rel.link_type) types.add(rel.link_type);
+        }
+        if (typeof cycleEdges !== "undefined") {
+            for (const ce of cycleEdges) {
+                if (ce.link_type) types.add(ce.link_type);
             }
         }
-        fieldValues[field] = [...values].sort();
+        fieldValues["link_type"] = [...types].sort();
+    } else {
+        const fields = ["issue_type", "status", "project", "assignee"];
+        for (const field of fields) {
+            const values = new Set();
+            for (const iss of issues) {
+                const val = iss[field];
+                if (val !== undefined && val !== null && val !== "") {
+                    values.add(typeof val === "string" ? val : String(val));
+                }
+            }
+            fieldValues[field] = [...values].sort();
+        }
     }
     const valueSelect = document.getElementById("filter-value");
     if (!valueSelect) return;
@@ -553,13 +568,30 @@ function applyDisplayFilter() {
         setStatus("Please select a field and value.", "warn");
         return;
     }
+
     const matchingKeys = new Set();
-    for (const iss of issues) {
-        const fieldValue = (iss[field] || "").toString().toLowerCase();
-        if (fieldValue.includes(value.toLowerCase())) {
-            matchingKeys.add(iss.key);
+
+    if (field === "link_type") {
+        // Find nodes that participate in any relationship of the selected type
+        const allRels = [...relationships];
+        if (typeof cycleEdges !== "undefined") allRels.push(...cycleEdges.map(ce => ({
+            source_key: ce.source_key, target_key: ce.target_key, link_type: ce.link_type
+        })));
+        for (const rel of allRels) {
+            if ((rel.link_type || "").toLowerCase() === value.toLowerCase()) {
+                matchingKeys.add(rel.source_key);
+                matchingKeys.add(rel.target_key);
+            }
+        }
+    } else {
+        for (const iss of issues) {
+            const fieldValue = (iss[field] || "").toString().toLowerCase();
+            if (fieldValue.includes(value.toLowerCase())) {
+                matchingKeys.add(iss.key);
+            }
         }
     }
+
     if (matchingKeys.size === 0) {
         setStatus(`No nodes match ${field}="${value}"`, "warn");
         return;
