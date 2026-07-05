@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>jira_viz — JIRA Relationship Visualizer</title>
+    <script type="text/javascript" src="https://unpkg.com/vis-network@9.1.6/standalone/umd/vis-network.min.js"></script>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div id="app">
+        <!-- Header / Controls -->
+        <div id="header">
+            <h1>jira_viz</h1>
+
+            <!-- Row 1: JQL Query (primary) -->
+            <div id="jql-section" style="margin-bottom:8px;">
+                <label for="jql-input" style="font-size:13px;color:#cdd6f4;font-weight:600;">JQL Query:</label>
+                <input type="text" id="jql-input" placeholder="Enter JQL query (e.g., project = OKR AND status != Done)" style="flex:1;padding:6px 10px;font-size:13px;" />
+                <button id="btn-fetch" onclick="fetchIssues()" style="padding:6px 16px;font-size:13px;background:#89b4fa;color:#1e1e2e;border:none;border-radius:4px;cursor:pointer;font-weight:600;">Fetch</button>
+                <button id="btn-layout" onclick="computeLayout()" disabled style="padding:6px 12px;font-size:12px;">Layout</button>
+                <span id="issue-count" class="badge"></span>
+            </div>
+
+            <!-- Row 2: Search + Filter -->
+            <div id="search-filter-row" style="display:flex;gap:12px;margin-bottom:8px;">
+                <!-- Search bar -->
+                <div id="find-bar" style="flex:0 0 40%;">
+                    <input type="text" id="find-input" placeholder="Search (key or summary)..." onkeydown="onFindKeydown(event)" style="flex:1;" />
+                    <label style="font-size:11px;color:#a6adc8;display:flex;align-items:center;gap:4px;">
+                        <input type="checkbox" id="find-strict" style="width:14px;height:14px;" /> Strict
+                    </label>
+                    <button id="btn-apply-find" onclick="manualFind()" style="padding:4px 10px;font-size:11px;background:#89b4fa;color:#1e1e2e;border:none;border-radius:3px;cursor:pointer;font-weight:600;">Apply</button>
+                    <button onclick="clearFind()">Clear</button>
+                    <button onclick="findPrev()">◀</button>
+                    <button onclick="findNext()">▶</button>
+                    <span id="find-counter" style="margin-left:4px;color:#6c7086;font-size:12px;"></span>
+                    <button onclick="focusFoundNode()" id="btn-find-focus" style="display:none;background:#a6e3a1;color:#1e1e2e;font-weight:600;font-size:11px;">Focus</button>
+                </div>
+
+                <!-- Display filter -->
+                <div id="filter-section" style="flex:1;display:flex;align-items:center;gap:8px;">
+                    <label style="font-size:12px;color:#a6adc8;white-space:nowrap;">Filter:</label>
+                    <select id="filter-field" style="padding:4px 8px;font-size:12px;background:#1e1e2e;border:1px solid #45475a;color:#cdd6f4;border-radius:3px;">
+                        <option value="">-- Field --</option>
+                        <option value="issue_type">Issue Type</option>
+                        <option value="status">Status</option>
+                        <option value="project">Project</option>
+                        <option value="assignee">Assignee</option>
+                    </select>
+                    <select id="filter-value" style="padding:4px 8px;font-size:12px;background:#1e1e2e;border:1px solid #45475a;color:#cdd6f4;border-radius:3px;">
+                        <option value="">-- Value --</option>
+                    </select>
+                    <label style="font-size:11px;color:#a6adc8;display:flex;align-items:center;gap:4px;">
+                        <input type="checkbox" id="filter-strict" style="width:14px;height:14px;" /> Strict
+                    </label>
+                    <button id="btn-apply-filter" onclick="applyDisplayFilter()" style="padding:4px 10px;font-size:11px;background:#89b4fa;color:#1e1e2e;border:none;border-radius:3px;cursor:pointer;font-weight:600;">Apply</button>
+                    <button id="btn-clear-filter" onclick="clearDisplayFilter()" style="padding:4px 10px;font-size:11px;background:#45475a;color:#cdd6f4;border:1px solid #45475a;border-radius:3px;cursor:pointer;">Clear</button>
+                </div>
+                <button id="btn-toggle-filter" onclick="toggleFilterSection()" style="padding:4px 8px;font-size:11px;background:#313244;color:#cdd6f4;border:1px solid #45475a;border-radius:3px;cursor:pointer;white-space:nowrap;">🔍 Hide Filter</button>
+            </div>
+
+            <!-- Row 3: Controls -->
+            <div id="controls" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+                <div id="link-types-section">
+                    <span id="link-types-display" class="badge">No link types loaded</span>
+                    <button id="btn-fetch-types" onclick="fetchLinkTypes()" style="padding:4px 10px;font-size:11px;">Refresh Types</button>
+                </div>
+                <span id="commit-queue-badge" class="badge" style="display:none">Commit queue: 0</span>
+                <button id="btn-restore" onclick="restoreFullGraph()" style="display:none">Restore Full Graph</button>
+                <button id="btn-commit" onclick="showCommitDialog()">Commit</button>
+                <button id="btn-reload" onclick="fetchIssues()">Reload from JIRA</button>
+                <button id="btn-export" onclick="exportCanvas()" title="Export canvas as PNG">📷</button>
+                <button id="btn-theme" onclick="toggleTheme()" title="Toggle dark/light theme">🌙</button>
+                <button id="btn-toggle-log" onclick="toggleLogPanel()" title="Toggle log panel">📋</button>
+            </div>
+        </div>
+
+        <!-- Main content: canvas + log panel + connections panel -->
+        <div id="main">
+            <div id="network-container">
+                <div id="mynetwork"></div>
+                <div id="network-status"></div>
+                <!-- Context menu for edges -->
+                <div id="context-menu" class="context-menu" style="display:none">
+                    <div onclick="editSelectedEdge()">Change type...</div>
+                    <div onclick="deleteSelectedEdge()">Delete</div>
+                    <div onclick="hideContextMenu()">Cancel</div>
+                </div>
+            </div>
+            <div id="connections-panel" class="side-panel" style="display:none">
+                <div id="connections-header" style="display:flex;align-items:center;justify-content:space-between;padding:8px 12px;background:#11111b;border-bottom:1px solid #313244;">
+                    <h3 style="margin:0;font-size:13px;font-weight:600;color:#a6adc8;">Connections: <span id="connections-node-key"></span></h3>
+                    <div style="display:flex;gap:6px;">
+                        <button onclick="closeConnectionsPanel()" style="font-size:12px;background:#f38ba8;color:#1e1e2e;border:none;border-radius:4px;cursor:pointer;font-weight:700;padding:4px 10px;">✕ Close</button>
+                    </div>
+                </div>
+                <!-- Viewing group: Show connections -->
+                <div style="padding:8px 12px;background:#181825;border-bottom:1px solid #313244;">
+                    <div style="font-size:11px;color:#6c7086;margin-bottom:6px;font-weight:600;">VIEW CONNECTIONS</div>
+                    <div style="display:flex;gap:6px;">
+                        <button onclick="showAllRelated()" style="flex:1;font-size:11px;background:#a6e3a1;color:#1e1e2e;border:none;border-radius:3px;cursor:pointer;font-weight:600;padding:5px;">Show All Related</button>
+                        <button id="btn-show-direct" onclick="showDirectConnections()" style="flex:1;font-size:11px;background:#fab387;color:#1e1e2e;border:none;border-radius:3px;cursor:pointer;font-weight:600;padding:5px;">Show Direct Connections</button>
+                    </div>
+                    <div style="margin-top:6px;">
+                        <button onclick="showGanttForNode(connectionsPanelNode)" style="width:100%;font-size:11px;background:#94e2d5;color:#1e1e2e;border:none;border-radius:3px;cursor:pointer;font-weight:600;padding:5px;">📊 View Gantt</button>
+                    </div>
+                </div>
+                <!-- Linking group: Add connections -->
+                <div style="padding:8px 12px;background:#181825;border-bottom:1px solid #313244;">
+                    <div style="font-size:11px;color:#6c7086;margin-bottom:6px;font-weight:600;">ADD CONNECTIONS</div>
+                    <div style="display:flex;gap:6px;">
+                        <button onclick="showAddConnectionDialog(connectionsPanelNode)" style="flex:1;font-size:11px;background:#89b4fa;color:#1e1e2e;border:none;border-radius:3px;cursor:pointer;font-weight:600;padding:5px;">+ Add Connection</button>
+                        <button onclick="openMultiLinkDialog()" style="flex:1;font-size:11px;background:#cba6f7;color:#1e1e2e;border:none;border-radius:3px;cursor:pointer;font-weight:600;padding:5px;">+ Add Multiple</button>
+                    </div>
+                </div>
+                <div id="connections-content"></div>
+            </div>
+            <div id="log-panel" style="display:none;">
+                <div id="log-header">
+                    <h3>Log <span id="log-total-lines"></span></h3>
+                    <button onclick="clearLogPanel()">Clear</button>
+                    <label><input type="checkbox" id="auto-refresh" checked> Auto-refresh</label>
+                </div>
+                <div id="log-content"></div>
+            </div>
+        </div>
+
+        <!-- Relationship type selection dialog -->
+        <div id="rel-dialog" class="dialog" style="display:none">
+            <div class="dialog-content">
+                <h3>Create Relationship</h3>
+                <p id="rel-dialog-source"></p>
+                <p>→ <span id="rel-dialog-target"></span></p>
+                <div id="rel-dialog-types"></div>
+                <div class="dialog-actions">
+                    <button onclick="cancelRelationship()">Cancel</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Commit review dialog -->
+        <div id="commit-dialog" class="dialog" style="display:none">
+            <div class="dialog-content" style="max-width: 600px;">
+                <h3>Pre-Commit Review</h3>
+                <p>The following changes will be committed to JIRA:</p>
+                <div id="commit-ops-list" style="max-height: 300px; overflow-y: auto; margin: 12px 0;"></div>
+                <div id="commit-live-log" style="max-height: 200px; overflow-y: auto; background: #181825; padding: 8px; border-radius: 4px; margin: 12px 0;"></div>
+                <div class="dialog-actions">
+                    <button onclick="clearCommitQueue()" style="background: #f38ba8; color: #1e1e2e; font-weight: 600;">🗑️ Clear Queue</button>
+                    <button onclick="dryRunCommit()" style="background: #f9e2af; color: #1e1e2e; font-weight: 600;">🔍 Dry Run</button>
+                    <button onclick="cancelCommit()">Cancel</button>
+                    <button onclick="executeCommit()" style="background: #a6e3a1; color: #1e1e2e; font-weight: 600;">Commit</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Commit result dialog -->
+        <div id="commit-result-dialog" class="dialog" style="display:none">
+            <div class="dialog-content" style="max-width: 600px;">
+                <h3>Commit Result</h3>
+                <div id="commit-result-content"></div>
+                <div class="dialog-actions">
+                    <button onclick="closeCommitResult()">Close</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Multi-Link dialog -->
+        <div id="multilink-dialog" class="dialog" style="display:none">
+            <div class="dialog-content" style="max-width: 700px;">
+                <h3>Multi-Link: <span id="multilink-parent-key"></span></h3>
+                <p>Link multiple nodes to this issue with different relationship types.</p>
+                <p style="font-size:12px;color:#a6adc8;margin-top:4px;">Select child nodes from the JQL result set and assign a relationship type to each.</p>
+                
+                <div id="multilink-list" style="max-height: 400px; overflow-y: auto; margin: 12px 0;">
+                    <!-- Dynamic list of child nodes -->
+                </div>
+                
+                <div style="margin-top: 8px;">
+                    <button onclick="addMultilinkRow()" style="padding:6px 12px;font-size:12px;background:#a6e3a1;color:#1e1e2e;border:none;border-radius:3px;cursor:pointer;font-weight:600;">+ Add Child</button>
+                </div>
+                
+                <div id="multilink-validation" style="margin-top:12px;padding:8px;background:rgba(249,226,175,0.1);border-radius:4px;display:none;">
+                    <strong style="color:#f9e2af;">Validation Warnings:</strong>
+                    <div id="multilink-warnings" style="margin-top:4px;font-size:12px;"></div>
+                </div>
+                
+                <div class="dialog-actions" style="margin-top:12px;">
+                    <button onclick="cancelMultilink()">Cancel</button>
+                    <button onclick="executeMultilink()" style="background:#a6e3a1;color:#1e1e2e;font-weight:600;">Commit All</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Gantt dialog -->
+        <div id="gantt-dialog" class="dialog" style="display:none">
+            <div class="dialog-content" style="max-width:95vw;width:95vw;max-height:90vh;">
+                <div id="gantt-header" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+                    <h3 id="gantt-title" style="margin:0;">📊 Gantt Chart</h3>
+                    <div style="display:flex;gap:6px;align-items:center;">
+                        <span id="gantt-dq-badge" style="display:none;font-size:11px;padding:2px 6px;border-radius:3px;background:#f9e2af;color:#1e1e2e;cursor:pointer;" title="Data quality issues">⚠️</span>
+                        <button onclick="toggleGanttView()" id="btn-gantt-view" style="font-size:11px;padding:4px 8px;background:#313244;color:#cdd6f4;border:1px solid #45475a;border-radius:3px;cursor:pointer;">By Assignee</button>
+                        <select id="gantt-assignee-filter" onchange="onGanttAssigneeFilter()" style="font-size:11px;padding:3px 6px;background:#1e1e2e;border:1px solid #45475a;color:#cdd6f4;border-radius:3px;">
+                            <option value="">All</option>
+                        </select>
+                        <button onclick="exportGanttPNG()" style="font-size:11px;padding:4px 8px;background:#a6e3a1;color:#1e1e2e;border:none;border-radius:3px;cursor:pointer;font-weight:600;" title="Export PNG">📥</button>
+                        <button onclick="closeGanttDialog()" style="font-size:12px;background:#f38ba8;color:#1e1e2e;border:none;border-radius:4px;cursor:pointer;font-weight:700;padding:4px 10px;">✕</button>
+                    </div>
+                </div>
+                <div id="gantt-chart-area" style="width:100%;min-height:300px;max-height:50vh;overflow:auto;background:#11111b;border-radius:6px;padding:8px;margin-bottom:8px;">
+                    <div id="gantt-canvas" style="position:relative;min-height:200px;"></div>
+                </div>
+                <div id="gantt-legend" style="display:flex;gap:12px;flex-wrap:wrap;font-size:10px;color:#a6adc8;margin-bottom:6px;"></div>
+                <div id="gantt-edit-section" style="display:none;padding:8px;background:#181825;border-radius:6px;margin-bottom:8px;">
+                    <div style="font-size:11px;color:#6c7086;margin-bottom:6px;font-weight:600;">EDIT — <span id="gantt-edit-key"></span></div>
+                    <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;">
+                        <div>
+                            <label style="font-size:11px;color:#a6adc8;">Start Date</label><br>
+                            <input type="date" id="gantt-start-date" style="padding:4px 8px;font-size:12px;background:#1e1e2e;border:1px solid #45475a;color:#cdd6f4;border-radius:3px;">
+                            <div id="gantt-start-current" style="font-size:10px;color:#6c7086;"></div>
+                        </div>
+                        <div>
+                            <label style="font-size:11px;color:#a6adc8;">Effort</label><br>
+                            <input type="text" id="gantt-effort" placeholder="e.g. 3d, 2.5w, 4h" style="padding:4px 8px;font-size:12px;background:#1e1e2e;border:1px solid #45475a;color:#cdd6f4;border-radius:3px;width:140px;">
+                            <div id="gantt-effort-current" style="font-size:10px;color:#6c7086;"></div>
+                        </div>
+                        <div style="display:flex;gap:6px;align-items:flex-end;">
+                            <button onclick="applyGanttEdit()" style="padding:5px 12px;font-size:11px;background:#a6e3a1;color:#1e1e2e;border:none;border-radius:3px;cursor:pointer;font-weight:600;">Apply</button>
+                            <button onclick="resetGanttEdit()" style="padding:5px 12px;font-size:11px;background:#45475a;color:#cdd6f4;border:none;border-radius:3px;cursor:pointer;">Reset</button>
+                        </div>
+                    </div>
+                </div>
+                <div id="gantt-summary" style="font-size:10px;color:#6c7086;margin-bottom:6px;"></div>
+                <div id="gantt-assignee-footer" style="font-size:10px;color:#a6adc8;max-height:100px;overflow-y:auto;"></div>
+                <div id="gantt-warnings" style="font-size:10px;color:#f9e2af;margin-top:4px;"></div>
+                <div class="dialog-actions" style="margin-top:8px;">
+                    <button onclick="closeGanttDialog()">Close</button>
+                    <button onclick="focusGanttNodeInGraph()" style="background:#89b4fa;color:#1e1e2e;font-weight:600;">Focus in Graph</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer: status bar -->
+    <div id="footer">
+        <div id="status-bar">
+            <span id="status-text">Ready.</span>
+            <span id="status-severity"></span>
+            <span id="keyboard-hints" style="margin-left: auto; font-size: 11px; color: #6c7086;">
+                Ctrl+F: Find &nbsp;|&nbsp; Ctrl+L: Toggle Log &nbsp;|&nbsp; Ctrl+Shift+F: Filter &nbsp;|&nbsp; Delete: Remove edge &nbsp;|&nbsp; Esc: Close dialog
+            </span>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script type="text/javascript" src="/static/app.js"></script>
+</body>
+</html>

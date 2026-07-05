@@ -1,0 +1,112 @@
+{
+  "issues": [
+    {
+      "key": "OKR-1",
+      "summary": "O1 - Postgres increase revenue for top line",
+      "issue_type": "Epic",
+      "status": "To Do",
+      "priority": "Medium",
+      "assignee": "Kevin Chin",
+      "self_url": "https://kevchin.atlassian.net/rest/api/2/issue/10448"
+    },
+    {
+      "key": "OKR-2",
+      "summary": "O2 - Security improvements for Postgres",
+      "issue_type": "Epic",
+      "status": "To Do",
+      "priority": "Medium",
+      "assignee": "Kevin Chin",
+      "self_url": "https://kevchin.atlassian.net/rest/api/2/issue/10449"
+    },
+    {
+      "key": "OKR-3",
+      "summary": "O3 - Better together for Snowflake Postgres",
+      "issue_type": "Epic",
+      "status": "To Do",
+      "priority": "Medium",
+      "assignee": null,
+      "self_url": "https://kevchin.atlassian.net/rest/api/2/issue/10450"
+    },
+    {
+      "key": "OKR-4",
+      "summary": "O1KR1 - at least 100 users",
+      "issue_type": "Key Result",
+      "status": "To Do",
+      "priority": "Medium",
+      "assignee": null,
+      "self_url": "https://kevchin.atlassian.net/rest/api/2/issue/10451"
+    },
+    {
+      "key": "OKR-5",
+      "summary": "O1KR2 - Less breaches - < 2 breaches per year",
+      "issue_type": "Key Result",
+      "status": "To Do",
+      "priority": "Medium",
+      "assignee": null,
+      "self_url": "https://kevchin.atlassian.net/rest/api/2/issue/10452"
+    },
+    {
+      "key": "OKR-6",
+      "summary": "O2KR1 - Add accounting feature to bill ",
+      "issue_type": "Key Result",
+      "status": "To Do",
+      "priority": "Medium",
+      "assignee": null,
+      "self_url": "https://kevchin.atlassian.net/rest/api/2/issue/10453"
+    },
+    {
+      "key": "OKR-7",
+      "summary": "O2KR2 - Consume iceberg before melts",
+      "issue_type": "Key Result",
+      "status": "To Do",
+      "priority": "Medium",
+      "assignee": null,
+      "self_url": "https://kevchin.atlassian.net/rest/api/2/issue/10454"
+    },
+    {
+      "key": "OKR-8",
+      "summary": "O3KR1 - do something here",
+      "issue_type": "Key Result",
+      "status": "To Do",
+      "priority": "Medium",
+      "assignee": null,
+      "self_url": "https://kevchin.atlassian.net/rest/api/2/issue/10455"
+    },
+    {
+      "key": "OKR-9",
+      "summary": "Foobar new KR here",
+      "issue_type": "Key Result",
+      "status": "To Do",
+      "priority": "Medium",
+      "assignee": null,
+      "self_url": "https://kevchin.atlassian.net/rest/api/2/issue/10492"
+    }
+  ],
+  "relationships": [
+    {
+      "source_key": "OKR-3",
+      "target_key": "OKR-2",
+      "link_type": "blocks",
+      "direction": "source_to_target"
+    },
+    {
+      "source_key": "OKR-2",
+      "target_key": "OKR-1",
+      "link_type": "relates",
+      "direction": "source_to_target"
+    },
+    {
+      "source_key": "OKR-1",
+      "target_key": "OKR-1",
+      "link_type": "relates",
+      "direction": "source_to_target"
+    }
+  ],
+  "link_types_allowed": [
+    "blocks",
+    "cloners",
+    "duplicate",
+    "problem/incident",
+    "relates"
+  ]
+}
