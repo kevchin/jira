@@ -1064,12 +1064,28 @@ function hideContextMenu() {
 }
 
 async function deleteSelectedEdge() {
+    // Save edge info before hideContextMenu clears selectedEdge
+    const edgeId = selectedEdge && selectedEdge.edgeId;
     hideContextMenu();
-    if (!selectedEdge) return;
 
-    // Find the edge in local relationships
+    if (!edgeId) {
+        setStatus("No edge selected.", "warn");
+        return;
+    }
+
+    // Get edge data from vis.js network
+    const edgeData = network.body.data.edges.get(edgeId);
+    if (!edgeData) {
+        setStatus("Edge data not found.", "warn");
+        return;
+    }
+
+    const { from, to } = edgeData;
+
+    // Find the edge in local relationships (try both directions)
     const edge = relationships.find(r =>
-        r.source_key === selectedEdge.from && r.target_key === selectedEdge.to
+        (r.source_key === from && r.target_key === to) ||
+        (r.source_key === to && r.target_key === from)
     );
     if (!edge) {
         setStatus("Edge not found in local state", "warn");
@@ -1119,14 +1135,17 @@ async function editSelectedEdge() {
 }
 
 async function swapEdgeDirection() {
+    // Save edge info before hideContextMenu clears selectedEdge
+    const edgeId = selectedEdge && selectedEdge.edgeId;
     hideContextMenu();
-    if (!selectedEdge || !selectedEdge.edgeId) {
+
+    if (!edgeId) {
         setStatus("No edge selected for swap.", "warn");
         return;
     }
 
     // Get edge data from vis.js network
-    const edgeData = network.body.data.edges.get(selectedEdge.edgeId);
+    const edgeData = network.body.data.edges.get(edgeId);
     if (!edgeData) {
         setStatus("Edge data not found.", "warn");
         return;

@@ -935,9 +935,10 @@ function hideContextMenu() {
 }
 
 async function deleteSelectedEdge() {
+    const edgeId = selectedEdge && selectedEdge.edgeId;
     hideContextMenu();
-    if (!selectedEdge || !selectedEdge.edgeId) return;
-    const edgeData = network.body.data.edges.get(selectedEdge.edgeId);
+    if (!edgeId) return;
+    const edgeData = network.body.data.edges.get(edgeId);
     if (!edgeData) return;
     const { from, to } = edgeData;
     const edge = relationships.find(r =>
@@ -987,13 +988,14 @@ function editSelectedEdge() {
 }
 
 async function swapEdgeDirection() {
+    const edgeId = selectedEdge && selectedEdge.edgeId;
     hideContextMenu();
-    if (!selectedEdge || !selectedEdge.edgeId) {
+    if (!edgeId) {
         setStatus("No edge selected for swap.", "warn");
         return;
     }
 
-    const edgeData = network.body.data.edges.get(selectedEdge.edgeId);
+    const edgeData = network.body.data.edges.get(edgeId);
     if (!edgeData) {
         setStatus("Edge data not found.", "warn");
         return;
