@@ -46,7 +46,7 @@ from jira_viz.gantt import GanttBuilder, parse_effort_to_seconds
 
 class TreeRequest(BaseModel):
     jql: str
-    max_root_results: int = 50
+    max_root_results: int = 100
     max_depth: int = DEFAULT_MAX_DEPTH
     max_nodes: int = DEFAULT_MAX_NODES
     link_type_filter: Optional[List[str]] = None
@@ -352,7 +352,7 @@ async def root():
 @app.get("/api/tree")
 async def api_tree(
     jql: str = Query(..., description="JQL query for root issues"),
-    max_root_results: int = Query(50, description="Max root issues to fetch"),
+    max_root_results: int = Query(100, description="Max root issues to fetch"),
     max_depth: int = Query(DEFAULT_MAX_DEPTH, description="Max recursion depth"),
     max_nodes: int = Query(DEFAULT_MAX_NODES, description="Max total nodes to fetch"),
     width: int = Query(1200, description="Canvas width for layout"),
