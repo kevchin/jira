@@ -1874,19 +1874,12 @@ function applyGanttEdit() {
         }
     }
 
-    // Optimistic update
-    const iss = issues.find(i => i.key === key);
-    if (iss) {
-        if (newStart) iss.start_date = newStart;
-        else iss.start_date = null;
-        if (effortSeconds) iss.original_estimate = effortSeconds;
-    }
-
-    // Queue edit
+    // Clear previous queue and build fresh edits
+    ganttCommitQueue = [];
     ganttCommitQueue.push({
         issue_key: key,
         field: "start_date",
-        old_value: ganttBars.find(b => b.key === key)?.start,
+        old_value: ganttBars.find(b => b.key === key)?.start || null,
         value: newStart || null
     });
     if (effortSeconds) {
@@ -1897,13 +1890,19 @@ function applyGanttEdit() {
         });
     }
 
+    setStatus("Applying edit...", "info");
+
     // Apply on server + re-render
-    apiPost("/api/gantt/apply-edits", { edits: ganttCommitQueue }).then(resp => {
+    apiPost("/api/gantt/apply-edits", {
+        edits: ganttCommitQueue,
+        focus_key: ganttFocusKey,
+        keys: ganttBars.map(b => b.key),
+        view: ganttCurrentView
+    }).then(resp => {
         ganttBars = resp.bars || ganttBars;
         ganttWarnings = resp.warnings || [];
         ganttDataQuality = resp.data_quality || {};
         ganttAssigneeSummaries = resp.assignee_summaries || [];
-        ganttCommitQueue = [];
         renderGanttChart();
         updateGanttWarnings();
         setStatus("Edit applied and queued for commit.", "info");

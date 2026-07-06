@@ -840,6 +840,9 @@ class GanttRequest(BaseModel):
 
 class GanttEditRequest(BaseModel):
     edits: List[dict]
+    focus_key: Optional[str] = None
+    keys: Optional[List[str]] = None
+    view: str = "dag"
 
 
 @app.get("/api/gantt")
@@ -935,7 +938,17 @@ async def api_gantt_apply_edits(req: GanttEditRequest):
         applied += 1
 
     builder = GanttBuilder(logger=_logger)
-    result = builder.build(issues=all_issues, relationships=source_rels)
+    result = builder.build(
+        issues=all_issues,
+        relationships=source_rels,
+        focus_key=req.focus_key,
+        view=req.view,
+        assignee_filter=None,
+    )
+    # Filter bars by keys if provided
+    if req.keys:
+        key_set = set(req.keys)
+        result.bars = [b for b in result.bars if b.key in key_set]
     response = result.to_dict()
     response["applied"] = applied
     response["edit_warnings"] = warnings
