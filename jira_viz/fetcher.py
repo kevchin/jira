@@ -431,27 +431,37 @@ class JIRAFetcher:
         Args:
             issue_key: e.g. 'OKR-10'
             field_name: 'start_date' (maps to configured custom field)
-                        or 'original_estimate' (maps to timeoriginalestimate)
+                        or 'original_estimate' (uses timetracking object)
             value: string for start_date, int (seconds) for original_estimate
 
         Returns: {'success': bool, 'status': int, 'response': str}
         """
         import requests as req_lib
+        from jira_viz.gantt import format_seconds_to_effort
 
-        field_map = {
-            'start_date': JIRA_START_DATE_FIELD,
-            'original_estimate': 'timeoriginalestimate',
-        }
-        jira_field = field_map.get(field_name)
-        if not jira_field:
-            return {'success': False, 'status': 400, 'response': f'Unknown field: {field_name}'}
-
-        self.logger.info("Updating field %s (%s) on %s to: %s", field_name, jira_field, issue_key, value)
+        self.logger.info("Updating field %s on %s to: %s", field_name, issue_key, value)
 
         try:
             url = f"{self.server}rest/api/2/issue/{issue_key}"
             headers = {"Content-Type": "application/json", "Accept": "application/json"}
-            payload = {"fields": {jira_field: value}}
+
+            if field_name == "original_estimate":
+                # JIRA stores estimates via the timetracking object, not timeoriginalestimate.
+                # The value must be a human-readable string like "3d", not raw seconds.
+                effort_str = format_seconds_to_effort(int(value)) if value else None
+                if not effort_str or effort_str == "—":
+                    effort_str = "0h"
+                payload = {
+                    "fields": {
+                        "timetracking": {
+                            "originalEstimate": effort_str
+                        }
+                    }
+                }
+            elif field_name == "start_date":
+                payload = {"fields": {JIRA_START_DATE_FIELD: value if value else None}}
+            else:
+                return {'success': False, 'status': 400, 'response': f'Unknown field: {field_name}'}
 
             auth = (self.email, self.key_file.read_text().strip())
             response = req_lib.put(url, json=payload, headers=headers, auth=auth)
