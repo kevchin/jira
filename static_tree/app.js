@@ -986,6 +986,99 @@ function editSelectedEdge() {
     setStatus("Deleted. Drag nodes to recreate with new type.", "info");
 }
 
+async function swapEdgeDirection() {
+    hideContextMenu();
+    if (!selectedEdge || !selectedEdge.edgeId) {
+        setStatus("No edge selected for swap.", "warn");
+        return;
+    }
+
+    const edgeData = network.body.data.edges.get(selectedEdge.edgeId);
+    if (!edgeData) {
+        setStatus("Edge data not found.", "warn");
+        return;
+    }
+
+    const { from, to } = edgeData;
+
+    // Find relationship in local state (try both directions)
+    const edge = relationships.find(r =>
+        (r.source_key === from && r.target_key === to) ||
+        (r.source_key === to && r.target_key === from)
+    );
+    const ceEdge = cycleEdges.find(ce =>
+        (ce.source_key === from && ce.target_key === to) ||
+        (ce.source_key === to && ce.target_key === from)
+    );
+    if (!edge && !ceEdge) {
+        setStatus("Relationship not found in local state — cannot swap.", "warn");
+        return;
+    }
+
+    const oldSource = edge ? edge.source_key : ceEdge.source_key;
+    const oldTarget = edge ? edge.target_key : ceEdge.target_key;
+    const linkType = edge ? edge.link_type : ceEdge.link_type;
+
+    if (linkType.toLowerCase() !== "blocks") {
+        setStatus("Swap direction is only supported for 'blocks' relationships.", "warn");
+        return;
+    }
+
+    const newSource = oldTarget;
+    const newTarget = oldSource;
+
+    setStatus(`Swapping direction: ${oldSource} → ${oldTarget} → ${newSource} → ${newTarget}`, "info");
+
+    try {
+        // Delete old relationship
+        const delResp = await fetch("/api/relationships", {
+            method: "DELETE",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ source_key: oldSource, target_key: oldTarget, link_type: linkType }),
+        });
+        const delData = await delResp.json();
+        if (!delResp.ok) {
+            setStatus(`Swap failed during delete: ${delData.error}`, "error");
+            return;
+        }
+
+        // Remove from local state
+        relationships = relationships.filter(r =>
+            !(r.source_key === oldSource && r.target_key === oldTarget && r.link_type === linkType)
+        );
+        cycleEdges = cycleEdges.filter(ce =>
+            !(ce.source_key === oldSource && ce.target_key === oldTarget && ce.link_type === linkType)
+        );
+
+        // Create new relationship (swapped)
+        const creResp = await fetch("/api/relationships", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ source_key: newSource, target_key: newTarget, link_type: linkType }),
+        });
+        const creData = await creResp.json();
+        if (!creResp.ok) {
+            relationships.push({ source_key: oldSource, target_key: oldTarget, link_type: linkType });
+            setStatus(`Swap failed during create: ${creData.error} — original restored.`, "error");
+            renderGraph(positions);
+            return;
+        }
+
+        // Add new relationship to local state
+        relationships.push({ source_key: newSource, target_key: newTarget, link_type: linkType });
+        commitQueueCount = creData.queue_count || 0;
+        updateCommitQueueDisplay();
+
+        setStatus(`Swapped: ${oldSource} → ${oldTarget} → ${newSource} → ${newTarget} (${linkType})`, "info");
+        appendToLogPanel(`INFO: Swapped direction: ${oldSource} → ${oldTarget} → ${newSource} → ${newTarget}`);
+        renderGraph(positions);
+
+    } catch (err) {
+        setStatus(`Swap failed: ${err.message}`, "error");
+        console.error(err);
+    }
+}
+
 // ---------------------------------------------------------------------------
 // Delete from connections panel
 // ---------------------------------------------------------------------------
