@@ -364,8 +364,10 @@ def _get_fetcher() -> JIRAFetcher:
 
 @app.get("/")
 async def root():
-    """Serve the main page."""
-    return HTMLResponse(content=Path("static/index.html").read_text())
+    """Serve the main page with injected config."""
+    html = Path("static/index.html").read_text()
+    html = html.replace("{{JIRA_BASE_URL}}", JIRA_BASE_URL.rstrip("/"))
+    return HTMLResponse(content=html)
 
 
 @app.get("/api/issues")

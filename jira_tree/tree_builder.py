@@ -13,6 +13,7 @@ from typing import Dict, List, Optional, Set, Tuple
 
 from jira_viz.fetcher import JIRAFetcher, _extract_original_estimate, _extract_start_date
 from jira_viz.models import JiraIssue, Relationship
+from jira_viz.config import JIRA_BASE_URL
 from jira_viz.graph import GraphModel
 from jira_tree.config import DEFAULT_MAX_DEPTH, DEFAULT_MAX_NODES
 
@@ -338,7 +339,7 @@ class TreeBuilder:
             fields = raw_issue.fields
 
             # Build JIRA web URL
-            jira_web_url = f"https://kevchin.atlassian.net/browse/{issue_key}"
+            jira_web_url = f"{JIRA_BASE_URL}browse/{issue_key}"
 
             # Extract project
             project_key = None

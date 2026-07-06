@@ -1,7 +1,8 @@
 from jira import JIRA
+from jira_viz.config import JIRA_BASE_URL
 
 # Configure your connection details
-JIRA_SERVER = "https://kevchin.atlassian.net/"
+JIRA_SERVER = JIRA_BASE_URL
 JIRA_EMAIL = "your-email@example.com"
 
 # Read API key from file

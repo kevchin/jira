@@ -7,7 +7,7 @@
       "status": "To Do",
       "priority": "Medium",
       "assignee": "Kevin Chin",
-      "self_url": "https://kevchin.atlassian.net/rest/api/2/issue/10448"
+      "self_url": "https://your-instance.atlassian.net/rest/api/2/issue/10448"
     },
     {
       "key": "OKR-2",
@@ -16,7 +16,7 @@
       "status": "To Do",
       "priority": "Medium",
       "assignee": "Kevin Chin",
-      "self_url": "https://kevchin.atlassian.net/rest/api/2/issue/10449"
+      "self_url": "https://your-instance.atlassian.net/rest/api/2/issue/10449"
     },
     {
       "key": "OKR-3",
@@ -25,7 +25,7 @@
       "status": "To Do",
       "priority": "Medium",
       "assignee": null,
-      "self_url": "https://kevchin.atlassian.net/rest/api/2/issue/10450"
+      "self_url": "https://your-instance.atlassian.net/rest/api/2/issue/10450"
     },
     {
       "key": "OKR-4",
@@ -34,7 +34,7 @@
       "status": "To Do",
       "priority": "Medium",
       "assignee": null,
-      "self_url": "https://kevchin.atlassian.net/rest/api/2/issue/10451"
+      "self_url": "https://your-instance.atlassian.net/rest/api/2/issue/10451"
     },
     {
       "key": "OKR-5",
@@ -43,7 +43,7 @@
       "status": "To Do",
       "priority": "Medium",
       "assignee": null,
-      "self_url": "https://kevchin.atlassian.net/rest/api/2/issue/10452"
+      "self_url": "https://your-instance.atlassian.net/rest/api/2/issue/10452"
     },
     {
       "key": "OKR-6",
@@ -52,7 +52,7 @@
       "status": "To Do",
       "priority": "Medium",
       "assignee": null,
-      "self_url": "https://kevchin.atlassian.net/rest/api/2/issue/10453"
+      "self_url": "https://your-instance.atlassian.net/rest/api/2/issue/10453"
     },
     {
       "key": "OKR-7",
@@ -61,7 +61,7 @@
       "status": "To Do",
       "priority": "Medium",
       "assignee": null,
-      "self_url": "https://kevchin.atlassian.net/rest/api/2/issue/10454"
+      "self_url": "https://your-instance.atlassian.net/rest/api/2/issue/10454"
     },
     {
       "key": "OKR-8",
@@ -70,7 +70,7 @@
       "status": "To Do",
       "priority": "Medium",
       "assignee": null,
-      "self_url": "https://kevchin.atlassian.net/rest/api/2/issue/10455"
+      "self_url": "https://your-instance.atlassian.net/rest/api/2/issue/10455"
     },
     {
       "key": "OKR-9",
@@ -79,7 +79,7 @@
       "status": "To Do",
       "priority": "Medium",
       "assignee": null,
-      "self_url": "https://kevchin.atlassian.net/rest/api/2/issue/10492"
+      "self_url": "https://your-instance.atlassian.net/rest/api/2/issue/10492"
     }
   ],
   "relationships": [

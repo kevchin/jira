@@ -13,7 +13,6 @@ from pathlib import Path
 from typing import List, Optional
 
 from jira import JIRA, JIRAError
-
 from jira_viz.config import JIRA_BASE_URL, JIRA_EMAIL, JIRA_API_KEY_FILE, JIRA_START_DATE_FIELD
 from jira_viz.logger import log_http_error
 from jira_viz.models import JiraIssue
@@ -125,7 +124,7 @@ class JIRAFetcher:
         issues = []
         for issue in results:
             # Construct JIRA web URL using issue key
-            jira_web_url = f"https://kevchin.atlassian.net/browse/{issue.key}"
+            jira_web_url = f"{JIRA_BASE_URL}browse/{issue.key}"
 
             # Extract project from issue raw data
             project_key = None

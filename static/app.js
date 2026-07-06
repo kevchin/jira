@@ -2056,8 +2056,9 @@ function getJiraWebUrl(issueKey) {
     if (issue && issue.jira_web_url) {
         return issue.jira_web_url;
     }
-    // Fallback: construct URL from known JIRA instance
-    return "https://kevchin.atlassian.net/browse/" + issueKey;
+    // Fallback: construct URL from injected config
+    const baseUrl = window.__JIRA_BASE_URL__ || "https://your-instance.atlassian.net";
+    return baseUrl + "/browse/" + issueKey;
 }
 
 // ---------------------------------------------------------------------------

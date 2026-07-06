@@ -1518,7 +1518,8 @@ function exportCanvas() {
 function getJiraWebUrl(issueKey) {
     const issue = issues.find(iss => iss.key === issueKey);
     if (issue && issue.jira_web_url) return issue.jira_web_url;
-    return "https://kevchin.atlassian.net/browse/" + issueKey;
+    const baseUrl = window.__JIRA_BASE_URL__ || "https://your-instance.atlassian.net";
+    return baseUrl + "/browse/" + issueKey;
 }
 
 // ---------------------------------------------------------------------------
