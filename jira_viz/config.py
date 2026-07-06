@@ -20,7 +20,7 @@ SERVER_PORT = 8000
 STATIC_DIR = Path("static")
 
 # Default JQL query (can be blank for empty start)
-DEFAULT_JQL_QUERY = "project = OKR AND status != Done ORDER BY key"
+DEFAULT_JQL_QUERY = ""
 
 # JIRA custom field ID for "Start Date" — adjust to your instance
 JIRA_START_DATE_FIELD = "customfield_10015"

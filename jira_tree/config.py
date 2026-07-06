@@ -19,7 +19,7 @@ SERVER_PORT = 8001  # Different port to avoid conflict
 STATIC_DIR = Path("static_tree")
 
 # Default JQL for root issues
-DEFAULT_ROOT_JQL = "project = OKR AND status != Done ORDER BY key"
+DEFAULT_ROOT_JQL = ""
 
 # Tree traversal limits
 DEFAULT_MAX_DEPTH = 15     # Maximum recursion depth
