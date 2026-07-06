@@ -39,7 +39,7 @@ from jira_viz.logger import get_logger, shutdown_logger
 
 class IssuesRequest(BaseModel):
     jql: str
-    max_results: int = 50
+    max_results: int = 100
 
 
 class LayoutRequest(BaseModel):
@@ -373,7 +373,7 @@ async def root():
 @app.get("/api/issues")
 async def api_issues(
     jql: str = Query(..., description="JQL query string"),
-    max_results: int = Query(50, description="Max results"),
+    max_results: int = Query(100, description="Max results"),
 ):
     """Fetch issues matching a JQL query and build the active graph."""
     global _active_graph

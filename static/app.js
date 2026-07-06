@@ -124,7 +124,7 @@ async function fetchIssues() {
     document.getElementById("btn-fetch").disabled = true;
 
     try {
-        const data = await apiGet(`/api/issues?jql=${encodeURIComponent(jql)}&max_results=50`);
+        const data = await apiGet(`/api/issues?jql=${encodeURIComponent(jql)}&max_results=100`);
         issues = data.issues || [];
         relationships = data.relationships || [];
         document.getElementById("issue-count").textContent = `${issues.length} issues, ${relationships.length} relationships`;

@@ -58,7 +58,7 @@ class TreeBuilder:
     def build_tree(
         self,
         root_jql: str,
-        max_results: int = 50,
+        max_results: int = 100,
         link_type_filter: Optional[List[str]] = None,
     ) -> TreeResult:
         """
@@ -67,6 +67,7 @@ class TreeBuilder:
         Args:
             root_jql: JQL query to find root issues
             max_results: Max number of root issues to fetch
+        Default: 100
             link_type_filter: Optional list of link type names to follow.
                               If None, follows ALL link types.
 

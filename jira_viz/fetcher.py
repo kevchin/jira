@@ -95,13 +95,13 @@ class JIRAFetcher:
             self.logger.error("Unexpected error connecting to JIRA: %s", e)
             raise
 
-    def fetch_issues(self, jql: str, max_results: int = 50) -> List[JiraIssue]:
+    def fetch_issues(self, jql: str, max_results: int = 100) -> List[JiraIssue]:
         """
         Fetch issues matching a JQL query.
 
         Args:
             jql: JIRA Query Language string
-            max_results: Maximum number of results (default 50)
+            max_results: Maximum number of results (default 100)
 
         Returns:
             List of JiraIssue objects
