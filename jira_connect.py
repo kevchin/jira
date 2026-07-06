@@ -2,7 +2,7 @@ from jira import JIRA
 
 # Configure your connection details
 JIRA_SERVER = "https://kevchin.atlassian.net/"
-JIRA_EMAIL = "kevchin365@gmail.com"
+JIRA_EMAIL = "your-email@example.com"
 
 # Read API key from file
 with open("JIRA_API.key") as f:

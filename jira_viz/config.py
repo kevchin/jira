@@ -9,7 +9,7 @@ from pathlib import Path
 
 # JIRA connection
 JIRA_BASE_URL = "https://kevchin.atlassian.net/"
-JIRA_EMAIL = "kevchin365@gmail.com"
+JIRA_EMAIL = "your-email@example.com"
 JIRA_API_KEY_FILE = Path("JIRA_API.key")
 
 # Logging
